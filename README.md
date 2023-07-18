@@ -1,24 +1,15 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This README contains the basic information to run the ChatBot created in Ruby on Rails.
 
-Things you may want to cover:
+* Ruby version: 2.7.5
 
-* Ruby version
+* Rails version: 5.2.8
+* Copy the values from .env.example and create one called .env that contains the values of your environment variables.
+* Run project:
+  - You must create a database according to your configuration of database.yml
+  - Bundle install
+  - rails s
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* Database initialization:
+  * Once the database is created, the seed must be run: rails db:seed

@@ -1,6 +1,9 @@
 class DepositsController < ApplicationController
+  skip_before_action :verify_authenticity_token
+
   def search
     @customer = find_customer_by_rut
+
     return rut_not_found unless @customer.present?
 
     deposit = find_deposit_by_date(deposits_params[:date])
@@ -8,7 +11,7 @@ class DepositsController < ApplicationController
 
     render json: {
       balance: deposit.balance
-    }
+    }, status: :ok
   end
 
   def paper_rolls
@@ -23,8 +26,10 @@ class DepositsController < ApplicationController
 
     return insufficient_balance unless is_insufficient_balance?
 
-    if @deposit.update(balance: @deposit.balance - (700*deposits_params[:quantity_rolls].to_i))
-      render json: { message: "Depósito actualizado correctamente", balance:  @deposit.balance}, status: :ok
+    old_balance = @deposit.balance
+    value_quantity_rolls = 700 * deposits_params[:quantity_rolls].to_i
+    if @deposit.update(balance: old_balance - value_quantity_rolls)
+      render json: { old_balance: old_balance, balance: @deposit.balance,  value_quantity_rolls: value_quantity_rolls}, status: :ok
     else
       render json: { error: "Error al actualizar el depósito." }, status: :unprocessable_entity
     end
@@ -41,30 +46,31 @@ class DepositsController < ApplicationController
   end
 
   def rut_not_found
-    render json: { error: "Rut de cliente no existe." }, status: :not_found
+    render json: { error: "Rut de cliente no existe." }, status: :accepted
   end
 
   def deposit_not_found(date)
-    render json: { error: "No se encontró un depósito para la fecha: #{date}." }, status: :not_found
+    render json: { error: "No se encontró un depósito para la fecha: #{date}." }, status: :accepted
   end
 
   def invalid_quantity_rolls
-    render json: { error: "La cantidad de rollos debe ser un número entero." }, status: :bad_request
+    render json: { error: "La cantidad de rollos debe ser un número entero mayor a cero" }, status: :accepted
   end
 
   def insufficient_balance
-    render json: { error: "Saldo insuficiente para realizar la solicitud de rollos." }, status: :unprocessable_entity
+    render json: { error: "Saldo insuficiente para realizar la solicitud de rollos." }, status: :accepted
   end
 
   def validate_quantity_rolls?
-    deposits_params[:quantity_rolls].to_i.to_s == deposits_params[:quantity_rolls]
+    quantity_rolls = deposits_params[:quantity_rolls]
+    quantity_rolls =~ /\A\d+\z/ && quantity_rolls.to_i > 0
   end
 
   def is_insufficient_balance?
-    @deposit.balance >= (700*deposits_params[:quantity_rolls].to_i)
+    @deposit.balance >= (700 * deposits_params[:quantity_rolls].to_i)
   end
 
   def deposits_params
-    params.require(:deposits).permit(:rut, :date, :dispatch_address, :quantity_rolls)
+    params.require(:data).permit(:rut, :date, :dispatch_address, :quantity_rolls)
   end
 end
