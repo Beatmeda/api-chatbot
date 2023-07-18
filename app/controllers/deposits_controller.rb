@@ -45,22 +45,6 @@ class DepositsController < ApplicationController
     @customer.deposits.find_by(date: date)
   end
 
-  def rut_not_found
-    render json: { error: "Rut de cliente no existe." }, status: :accepted
-  end
-
-  def deposit_not_found(date)
-    render json: { error: "No se encontró un depósito para la fecha: #{date}." }, status: :accepted
-  end
-
-  def invalid_quantity_rolls
-    render json: { error: "La cantidad de rollos debe ser un número entero mayor a cero" }, status: :accepted
-  end
-
-  def insufficient_balance
-    render json: { error: "Saldo insuficiente para realizar la solicitud de rollos." }, status: :accepted
-  end
-
   def validate_quantity_rolls?
     quantity_rolls = deposits_params[:quantity_rolls]
     quantity_rolls =~ /\A\d+\z/ && quantity_rolls.to_i > 0
